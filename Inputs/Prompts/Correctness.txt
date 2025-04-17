@@ -1,0 +1,3 @@
+Why is the sky blue?
+why is grass green?
+Why does indexing start at 0?
