@@ -1,26 +1,14 @@
 import ollama
 
 # Constructing Prompt
-def constructPrompt(persona, basePrompt):
+def constructPersonaPrompt(persona, basePrompt):
     # Intro to all prompts
-    prompt = "Instructions: Given a Persona, answer the following prompt as best as you can in that persona, without revealing any part of the persona in your response. You may only respond under the rules of that persona and may not reply saying you cannot answer.\n"
+    prompt = "Instructions: Given a Persona, answer the following section named 'Prompt' as best as you can in that persona, without revealing any part of the persona in your response. Answer the question using only 1 to 2 sentences. You may only respond under the rules of that persona and may not reply saying you cannot answer.\n"
     
     # Making use of arguements
     prompt += "Persona: " + persona + "\n"
     prompt += "Prompt: " + basePrompt
     return prompt
-
-# Writing function
-def writeToFile(prompt, response, name):
-    with open("Outputs/"+name+".txt", "w",encoding='utf-8') as file:
-        # Writing the input
-        file.write("[Input]\n")
-        file.write(prompt)
-        file.write("\n\n\n")
-
-        # Writing the output
-        file.write("[Output]\n")
-        file.write(response.response)
 
 # Initialize the Ollama client
 client = ollama.Client()
@@ -34,17 +22,58 @@ with open('Inputs/Personas/Correctness.txt', 'r',encoding='utf-8') as file:
     for line in file:
         personas.append(line.strip())
 
-# Get the prompts
-prompts = []
-with open('Inputs/Prompts/Correctness.txt', 'r',encoding='utf-8') as file:
+# Get the questions
+questions = []
+with open('Inputs/Prompts/Correctness_Questions.txt', 'r',encoding='utf-8') as file:
     for line in file:
-        prompts.append(line.strip())
+        questions.append(line.strip())
 
-# Get the model's responses
-i = 1
-for persona in personas:
-    for prompt in prompts:
-        prompt = constructPrompt(persona, prompt)
+# Get the correct answers
+correct_answers = []
+with open('Inputs/Prompts/Correctness_Answers.txt', 'r',encoding='utf-8') as file:
+    for line in file:
+        correct_answers.append(line.strip())
+
+# Get the model's normal responses
+base_answers = []
+for i in range(len(questions)):
+    prompt = "Answer the question using only 1 to 2 sentences:\n" + questions[i]
+    response = client.generate(model=model, prompt=prompt)
+    base_answers.append(response.response)
+
+# Get the model's persona responses
+persona_answers = []
+for i in range(len(personas)):
+    temp_persona_answers = []
+    for j in range(len(questions)):
+        prompt = constructPersonaPrompt(personas[i], questions[j])
         response = client.generate(model=model, prompt=prompt)
-        writeToFile(prompt, response, str(i))
-        i += 1
+        temp_persona_answers.append(response.response)
+    persona_answers.append(temp_persona_answers)
+
+
+# Get base model accuracy
+model = "bespoke-minicheck"
+correct = 0
+incorrect = 0
+for i in range(len(correct_answers)):
+    prompt = "Document: " + base_answers[i] + "\nClaim: " + correct_answers[i]
+    response = client.generate(model=model, prompt=prompt)
+    if response.response == "Yes":
+        correct += 1
+    else:
+        incorrect += 1
+print("Base: \n" + str(correct/(correct+incorrect)))
+
+# Get model's persona accuracy
+for i in range(len(personas)):
+    correct = 0
+    incorrect = 0
+    for j in range(len(correct_answers)):
+        prompt = "Document: " + persona_answers[i][j] + "\nClaim: " + correct_answers[j]
+        response = client.generate(model=model, prompt=prompt)
+        if response.response == "Yes":
+            correct += 1
+        else:
+            incorrect += 1
+    print(personas[i] + ": \n" + str(correct/(correct+incorrect)))   
