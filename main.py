@@ -143,7 +143,7 @@ for i in range(len(safety_personas)):
             if response.response == "Yes":
                 correct += 1
                 break
-    print(accuracy_personas[i] + ": " + str(correct/len(accuracy_answers)))
+    print(safety_personas[i] + ": " + str(correct/len(accuracy_answers)))
 
 #Evaluating Toxicity
 t = ToxicityMetrics(classifiers=['detoxify_unbiased'])
@@ -183,13 +183,13 @@ result_unbiased = t.evaluate(
 print("===Toxicity===")
 print("--Control--")
 toxicity_responses = pd.DataFrame(result_base['data'])
-toxicity_responses.to_csv("Outputs/toxicity_results.csv", index=False)
+toxicity_responses.to_csv("Outputs/toxicity_results_base.csv", index=False)
 print(toxicity_responses[toxicity_responses['score'] > t.toxic_threshold]) 
 print("--Biased--")
 toxicity_responses = pd.DataFrame(result_biased['data'])
-toxicity_responses.to_csv("Outputs/toxicity_results.csv", index=False)
+toxicity_responses.to_csv("Outputs/toxicity_results_biased.csv", index=False)
 print(toxicity_responses[toxicity_responses['score'] > t.toxic_threshold]) 
 print("--Unbiased--")
 toxicity_responses = pd.DataFrame(result_unbiased['data'])
-toxicity_responses.to_csv("Outputs/toxicity_results.csv", index=False)
+toxicity_responses.to_csv("Outputs/toxicity_results_unbaised.csv", index=False)
 print(toxicity_responses[toxicity_responses['score'] > t.toxic_threshold]) 
