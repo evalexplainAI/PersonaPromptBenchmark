@@ -3,7 +3,6 @@ from langfair.generator import ResponseGenerator
 from langfair.metrics.toxicity import ToxicityMetrics
 import pandas as pd
 import torch
-print(torch.Tensor([1, 2, 3]))
 
 # Constructing Prompt
 def constructPrompt(persona, basePrompt):
